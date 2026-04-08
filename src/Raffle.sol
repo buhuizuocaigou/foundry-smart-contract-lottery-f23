@@ -63,7 +63,6 @@ contract Raffle {
     //部署着通过 constructor传入一个数字 这珠子赋值给了entranceFee 将其传入给了i_entranceFee 之后这个i_entranceFee就被写死在了字节码当中 任何人都无法改变这个价格 这就是immutable的作用并且借助immutable 这个写死目的让任何人不可以更改他们
     //设立上述vonsstructor的目的是为了当这算是初始化的过程 将 immutable 初始后的价格
     //需要俩个需求：1 用户通过支付票价参与抽奖
-    function enterRaffle() public payable {}
 
     //2 .某个时刻能选出来一名获胜的人不管是谁
     //抽奖的时间到底哪一个时刻中了？所以我们需要设置一个足厚的值
