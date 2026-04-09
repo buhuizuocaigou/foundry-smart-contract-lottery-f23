@@ -4,3 +4,8 @@ out = "out"
 libs = ["lib"]
 
 # See more config options https://github.com/foundry-rs/foundry/blob/master/crates/config/README.md#all-options
+#为了适应上述进行的重新映射的东西
+remappings = [
+    "@chainlink/contracts@1.5.0/=lib/chainlink-brownie-contracts/contracts/",
+    "chainlink/=lib/chainlink/",
+]

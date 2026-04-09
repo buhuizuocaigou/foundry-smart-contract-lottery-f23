@@ -25,24 +25,35 @@
 // view & pure functions ：纯计算
 
 pragma solidity ^0.8.19;
+import {VRFConsumerBaseV2Plus} from "@chainlink/contracts@1.5.0/src/v0.8/vrf/dev/VRFConsumerBaseV2Plus.sol";
+//提供了 RandomWordsrEQUEST struct 跟 _argsToBytes的工具函数 VRF请求要用的函数
+import {VRFV2PlusClient} from "@chainlink/contracts@1.5.0/src/v0.8/vrf/dev/libraries/VRFV2PlusClient.sol";
 
+error Raffle__NotEnoughETHEntered(); //使用自定义错误来干嘛排除当用户输入的ETH的金额过少的饿时候 提示错误目的是告知用户需要交更多的ETH
+
+//声明动态数组用来存放东西的一个容器：
+//chainlink VRFv2.5
 /**
  * @title 抽奖合同的范本
  * @author Nirenix
  * @notice 此合约用于创建实例的抽奖活动以及内容。
  * @dev 他实现了ChainkLINK VRF功能来实现随机数以及 Chainklink Automations 来实现抽奖功能
  */
-error Raffle__NotEnoughETHEntered(); //使用自定义错误来干嘛排除当用户输入的ETH的金额过少的饿时候 提示错误目的是告知用户需要交更多的ETH
-
-//声明动态数组用来存放东西的一个容器：
-
-contract Raffle {
+contract Raffle is VRFConsumerBaseV2Plus {
     uint256 private immutable i_entranceFee; //定义不可变的票价的价格并且是私有的 ,一旦可更改就不公平,immutable 是不可更改直接嵌入字节码中并且不耗费gas的变量
     //后面这个变量解决了抽奖时间的问题即为我们不希望只有两个忍就可以发起好凑将所以我们需要添加一些东西给他限制一下
     uint256 private immutable i_interval;
     uint256 private s_lastTimeStamp; //上一次抽奖的最终值 这次得及时更改 不能像之前写死 他是动态可调整的所以不用immutable
 
     address payable[] private s_players; //定义一个动态数组来存放玩家的地址以及这个内容。
+    //chainlinkVRF相关变量
+    bytes32 private immutable i_gasLane; //keyhash 决定用哪条gas通道提交请求的东西
+    //每条链条不同的gas代表不同的gas price 上你咱 部署的时候传入 写死不变
+    uint256 private immutable i_subscriptionId; //你的VRF的订阅ID ：在chainlink创建的订阅账户id 用来口link付费
+    uint32 private immutable i_callbackGasLimit; //回调函数最多能用多少的gas 防止回他过多gas
+    uint16 private constant REQUEST_CONFIRMATIONS = 3; //等几个区块确认 constant写死为3 等三个区块确认会回调 防止链重组
+    uint32 private constant NUM_WORDS = 1; //随机数的数量只需要1个选一个应急
+
     //涉及到钱了 这里面存放了这么多 选取一个获取金钱
     event EnteredRaffle(address indexed player);
 
@@ -52,13 +63,25 @@ contract Raffle {
     //这个player 是自己起的名字
 
     //写死这个价格 放到字节码当中 不管是谁都无法改变这个价格
-    constructor(uint256 entranceFee, uint256 interval) {
+    constructor(
+        uint256 entranceFee,
+        uint256 interval,
+        address vrfCoordinator, //继承的代码部分构造函数  因为之前借助了VRF的继承代码 所以必须这么做
+        bytes32 gasLane,
+        uint256 subscriptionId,
+        uint32 callbackGasLimit //对上述的新增状态变量的仨做初始化 然后下面一一对应上
+    ) VRFConsumerBaseV2Plus(vrfCoordinator) {
         //相当于是entranceFee是这个参数 部署完毕就消失了
         //这个书通过参数的entranceFee传进来赋值给i_entranceFee的值对吗
         i_entranceFee = entranceFee;
         i_interval = interval; //我自己设置的抽奖时间间隔写死的
         s_lastTimeStamp = block.timestamp; //这是一个新函数 这个block.timestamp的用途是当前这个区块的时间戳，指的是当下这个时间戳本身的内容
+        i_gasLane = gasLane;
+        i_subscriptionId = subscriptionId;
+        i_callbackGasLimit = callbackGasLimit;
     }
+
+    //统一接口部署变量相当于是统一跟前端的接口部分内容
 
     //部署着通过 constructor传入一个数字 这珠子赋值给了entranceFee 将其传入给了i_entranceFee 之后这个i_entranceFee就被写死在了字节码当中 任何人都无法改变这个价格 这就是immutable的作用并且借助immutable 这个写死目的让任何人不可以更改他们
     //设立上述vonsstructor的目的是为了当这算是初始化的过程 将 immutable 初始后的价格
@@ -73,6 +96,20 @@ contract Raffle {
         if (block.timestamp - s_lastTimeStamp < i_interval) {
             revert("weimanzu!");
         }
+        //借助VRF2.5随机性进行项目编写以及梳理 为啥要用这段代码呢？不急
+        uint256 requestId = s_vrfCoordinator.requestRandomWords( //这里继承父合约 并且直接用
+            VRFV2PlusClient.RandomWordsRequest({ //用struct传参 类似于c语言的结构体
+                keyHash: i_gasLane,
+                subId: i_subscriptionId,
+                requestConfirmations: REQUEST_CONFIRMATIONS,
+                callbackGasLimit: i_callbackGasLimit,
+                numWords: NUM_WORDS,
+                extraArgs: VRFV2PlusClient._argsToBytes(
+                    // Set nativePayment to true to pay for VRF requests with Sepolia ETH instead of LINK
+                    VRFV2PlusClient.ExtraArgsV1({nativePayment: true}) //这里false 嗲表用 link付费
+                )
+            })
+        );
     }
 
     //目的是让人能看到这个抽奖价格是多少设立一个get函数
@@ -92,4 +129,11 @@ contract Raffle {
     } //if 跟 这个msg判断 搭配revert 一起 告诉他们如果不符合标准的haul只额吉revert回退 这个仅仅在solidity 高于0.8.4 才有
 
     //用户花钱了支付了门票后我们得有一个存放的地方 来存放谁花了钱购买了啥东西买了紧张 这时候我们需要用到 Arrray 且是可伸缩的动态数组来解决这个问题
+    //abstract错误 需要在合约中这个目前还不急 只是需求这个地方
+    function fulfillRandomWords(
+        uint256 requestId,
+        uint256[] calldata randomWords
+    ) internal override {
+        // 你的逻辑
+    }
 }
