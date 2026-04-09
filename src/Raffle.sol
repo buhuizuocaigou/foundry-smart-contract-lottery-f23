@@ -130,10 +130,16 @@ contract Raffle is VRFConsumerBaseV2Plus {
 
     //用户花钱了支付了门票后我们得有一个存放的地方 来存放谁花了钱购买了啥东西买了紧张 这时候我们需要用到 Arrray 且是可伸缩的动态数组来解决这个问题
     //abstract错误 需要在合约中这个目前还不急 只是需求这个地方
+
+    //调用该函数的时候 会使用从继承变量向VRF 协调器发送随机数Raffle::performUpkeep请求 会生成请求ID
+    //当获得区块去人后 会 chainlink会生成随机数 调用父节点中的raawFlfillRandomWords函数 并且验证地址，然后在调用fulfRA函数内容
     function fulfillRandomWords(
         uint256 requestId,
-        uint256[] calldata randomWords
+        unint256[] calldata randomWords
     ) internal override {
-        // 你的逻辑
+        //选择获胜者并且发送奖励然后重置抽奖
     }
+    //轮动数学计算必将伴随着取模行为类似于星期一样的周期摸数返回
+
+    //为啥在子合约中重写呢？因为VRFConsumerBaseV2Plus被标记为 virtual 需要在自合约中重写
 }
