@@ -1,4 +1,4 @@
-//SPDEX:License-Identifier: MIT
+//SPDX:License-Identifier: MIT
 
 // Layout of the contract file:
 // version
@@ -62,9 +62,11 @@ contract Raffle is VRFConsumerBaseV2Plus {
     uint16 private constant REQUEST_CONFIRMATIONS = 3; //等几个区块确认 constant写死为3 等三个区块确认会回调 防止链重组
     uint32 private constant NUM_WORDS = 1; //随机数的数量只需要1个选一个应急
     RaffleState private s_raffleState; //设立抽奖状态变量
-
+    address private s_recentWinner;
     //涉及到钱了 这里面存放了这么多 选取一个获取金钱
     event EnteredRaffle(address indexed player);
+
+    event PickedWinner(address winner); //发出一个事件告诉他们我们已经选出获胜者了
 
     //设置事件 进行事件设定 其中address是参数类型 player 是参数名字
     //这个indexed特有意思 让这个参数可以被链下的过滤器搜索 比如前端可以只监听某个特定地址的事件，比如EnteredRaffle事件 而不是遍历所有的事件内容想当于是多了一个地址索引
@@ -135,7 +137,7 @@ contract Raffle is VRFConsumerBaseV2Plus {
             revert Raffle__NotEnoughETHEntered(); //如果用户输入的金额小于这个写死的价格 就抛出这个错误
         } //如果msg.value 即用户输入的比这个 原来规定的抽一次奖的单价逗笑的haul 返回单价错误告诉他ETH目前不够需要再次支付才可
 
-        if (s_raffleState != s_raffleState.OPEN) {
+        if (s_raffleState != RaffleState.OPEN) {
             revert Raffle__RaffleNotOpen();
         } // 这里是通过检查是否是open状态来判断的
 
@@ -166,6 +168,9 @@ contract Raffle is VRFConsumerBaseV2Plus {
         if (!success) {
             revert Raffle__TransferFailed(); //他就会返回成不成这个bool值 如果没成的话，直接返回跳转到这个失败的函数状态中，所以我们需要解决这个状态到底是啥的问题
         }
+        s_players = new address payable[](0); //抽奖之后 没有中奖的玩家返回到一个新数组内并且 将 block.timestamp;的值更新到现在这一刻
+        s_lastTimeStamp = block.timestamp; //更新值
+        emit PickedWinner(winner);
     }
     //轮动数学计算必将伴随着取模行为类似于星期一样的周期摸数返回
 
