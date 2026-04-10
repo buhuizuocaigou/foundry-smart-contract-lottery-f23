@@ -93,7 +93,7 @@ contract Raffle is VRFConsumerBaseV2Plus {
         s_raffleState = RaffleState.OPEN;
     }
 
-    //统一接口部署变量相当于是统一跟前端的接口部分内容
+    //统一接口部署变量相当于是统一跟前端的接口部分内容11212
 
     //部署着通过 constructor传入一个数字 这珠子赋值给了entranceFee 将其传入给了i_entranceFee 之后这个i_entranceFee就被写死在了字节码当中 任何人都无法改变这个价格 这就是immutable的作用并且借助immutable 这个写死目的让任何人不可以更改他们
     //设立上述vonsstructor的目的是为了当这算是初始化的过程 将 immutable 初始后的价格
