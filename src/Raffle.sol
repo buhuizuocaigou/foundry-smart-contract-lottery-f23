@@ -28,10 +28,16 @@ pragma solidity ^0.8.19;
 import {VRFConsumerBaseV2Plus} from "@chainlink/contracts@1.5.0/src/v0.8/vrf/dev/VRFConsumerBaseV2Plus.sol";
 //提供了 RandomWordsrEQUEST struct 跟 _argsToBytes的工具函数 VRF请求要用的函数
 import {VRFV2PlusClient} from "@chainlink/contracts@1.5.0/src/v0.8/vrf/dev/libraries/VRFV2PlusClient.sol";
+import {AutomationCompatibleInterface} from "@chainlink/contracts@1.5.0/src/v0.8/automation/interfaces/AutomationCompatibleInterface.sol";
 
 error Raffle__NotEnoughETHEntered(); //使用自定义错误来干嘛排除当用户输入的ETH的金额过少的饿时候 提示错误目的是告知用户需要交更多的ETH
 error Raffle__TransferFailed(); //定义如果发现转账不成功的话revert的值 失败后的错误
 error Raffle__RaffleNotOpen(); //定义 如果发现 Raffleopen失败了 的话 报错目的为了验证枚举是否成功
+error Raffle__UpkeepNotNeeded(
+    uint256 currentBalance,
+    uint256 numPlayers,
+    uint256 raffleState
+);
 
 //声明动态数组用来存放东西的一个容器：
 //chainlink VRFv2.5
@@ -41,7 +47,7 @@ error Raffle__RaffleNotOpen(); //定义 如果发现 Raffleopen失败了 的话 
  * @notice 此合约用于创建实例的抽奖活动以及内容。
  * @dev 他实现了ChainkLINK VRF功能来实现随机数以及 Chainklink Automations 来实现抽奖功能
  */
-contract Raffle is VRFConsumerBaseV2Plus {
+contract Raffle is VRFConsumerBaseV2Plus, AutomationCompatibleInterface {
     //类型声明：
     enum RaffleState {
         OPEN, //最开始抽奖的状态
@@ -102,29 +108,66 @@ contract Raffle is VRFConsumerBaseV2Plus {
     //2 .某个时刻能选出来一名获胜的人不管是谁
     //抽奖的时间到底哪一个时刻中了？所以我们需要设置一个足厚的值
     //跟抽奖持续时间最相关的函数就是他 到底是哪一个时刻选择的呢 有待考虑ing
-    function pickWinner() external {
-        //确认开奖是否真的满足间隔时间
-        //比如我设置600ms开 结果比他小 500ms开了
-        if (block.timestamp - s_lastTimeStamp < i_interval) {
-            revert("weimanzu!");
-        }
+    //这是及诶点调用的函数 chiankkeper调用要借助 chainlink 自动化的 必须满足条件 会检查是否满足tre
+    //若返回true 必须满足以下条件 1 两次抽奖之间间隔已经过去。 2 抽奖已经开始 3 有ETH 4有玩家注册 5 用link提供资金支持
+    function checkUpkeep(
+        bytes memory /*checkData*/
+    ) public view returns (bool upkeepNeeded, bytes memory /*performData*/) {
+        //将抽奖合约的状态打开，设置为OPEN 的这个状态值明明为isopen 这证明了合约状态打开值 且为true
+        bool isOpen = RaffleState.OPEN == s_raffleState;
+        bool timePassed = ((block.timestamp - s_lastTimeStamp) >= i_interval); //这里只要true跟false如果要成是true的状态 也就是说将其化为了0跟1 的变量
+        bool hasPlayers = s_players.length > 0; //有玩家 存放玩家那个数组不是0
+        bool hasBalance = address(this).balance > 0; //满足返ture
+        upkeepNeeded = (timePassed && isOpen && hasBalance && hasPlayers); //如果要上述都是1111也就是都满足的情况下
+        return (upkeepNeeded, "0x0"); //?这里为啥要返回这个 0x0 这是个占位符 正常的情况下他可能跟返回的更高的值
+    }
 
-        s_raffleState = RaffleState.CALCULATING; //挑选中奖者之后 的状态 显然符合后面 选完这个代码 通过设立这个状态以便于更好的确保安全性 验证的问题 会更好的防范
-        //借助VRF2.5随机性进行项目编写以及梳理 为啥要用这段代码呢？不急
-        uint256 requestId = s_vrfCoordinator.requestRandomWords( //这里继承父合约 并且直接用
-            VRFV2PlusClient.RandomWordsRequest({ //用struct传参 类似于c语言的结构体
+    function performUpkeep(bytes calldata /*performData*/) external override {
+        (bool upkeepNeeded, ) = checkUpkeep(""); //checkupkeep调用我写的那个函数 传空字符串进去，checkupkeep返回俩只 逗号面前的空位表示我只要upkeepneed 返回值告诉我通过没通过 通过了证明一期二正常
+        if (!upkeepNeeded) {
+            revert Raffle__UpkeepNotNeeded(
+                address(this).balance,
+                s_players.length,
+                uint256(s_raffleState) //上面三个不满足的时候就返回三个条件竟然不包含结果
+            );
+        }
+        s_raffleState = RaffleState.CALCULATING; //修改状态后 并且做验证
+        //这里先CEI中的先检查在设置状态的问题
+        uint256 requestId = s_vrfCoordinator.requestRandomWords(
+            VRFV2PlusClient.RandomWordsRequest({
                 keyHash: i_gasLane,
                 subId: i_subscriptionId,
                 requestConfirmations: REQUEST_CONFIRMATIONS,
                 callbackGasLimit: i_callbackGasLimit,
                 numWords: NUM_WORDS,
                 extraArgs: VRFV2PlusClient._argsToBytes(
-                    // Set nativePayment to true to pay for VRF requests with Sepolia ETH instead of LINK
-                    VRFV2PlusClient.ExtraArgsV1({nativePayment: true}) //这里false 嗲表用 link付费
+                    VRFV2PlusClient.ExtraArgsV1({nativePayment: false})
                 )
             })
         );
     }
+
+    //确认开奖是否真的满足间隔时间
+    // //比如我设置600ms开 结果比他小 500ms开了
+    // if (block.timestamp - s_lastTimeStamp < i_interval) {
+    //     revert("weimanzu!");
+    // }
+
+    // s_raffleState = RaffleState.CALCULATING; //挑选中奖者之后 的状态 显然符合后面 选完这个代码 通过设立这个状态以便于更好的确保安全性 验证的问题 会更好的防范
+    // //借助VRF2.5随机性进行项目编写以及梳理 为啥要用这段代码呢？不急
+    // uint256 requestId = s_vrfCoordinator.requestRandomWords( //这里继承父合约 并且直接用
+    //     VRFV2PlusClient.RandomWordsRequest({ //用struct传参 类似于c语言的结构体
+    //         keyHash: i_gasLane,
+    //         subId: i_subscriptionId,
+    //         requestConfirmations: REQUEST_CONFIRMATIONS,
+    //         callbackGasLimit: i_callbackGasLimit,
+    //         numWords: NUM_WORDS,
+    //         extraArgs: VRFV2PlusClient._argsToBytes(
+    //             // Set nativePayment to true to pay for VRF requests with Sepolia ETH instead of LINK
+    //             VRFV2PlusClient.ExtraArgsV1({nativePayment: true}) //这里false 嗲表用 link付费
+    //         )
+    //     })
+    // );
 
     //目的是让人能看到这个抽奖价格是多少设立一个get函数
     function getEntranceFee() public view returns (uint256) {
