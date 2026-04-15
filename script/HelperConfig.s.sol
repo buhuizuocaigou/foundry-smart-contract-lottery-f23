@@ -2,10 +2,16 @@
 pragma solidity ^0.8.20;
 
 import {Script} from "forge-std/Script.sol";
+import {
+    VRFCoordinatorV2_5Mock
+} from "@chainlink/contracts@1.5.0/src/v0.8/vrf/mocks/VRFCoordinatorV2_5Mock.sol";
 
 abstract contract CodeConstants {
     uint256 public constant ETH_SEPOLIA_CHAIN_ID = 11155111;
     uint256 public constant LOCAL_CHAIN_ID = 31337;
+    uint96 public constant MOCK_BASE_FEE = 0.25 ether;
+    uint96 public constant MOCK_GAS_PRICE_LINK = 1e9;
+    int256 public constant MOCK_WEI_PER_UNIT_LINK = 4e15;
 }
 
 //生成 raffle.sol这些初始化的参数结构有了生成部分内容下面进行本地网络配置不评分
@@ -22,6 +28,10 @@ contract HelperConfig is Script, CodeConstants {
         uint256 subscriptionId;
         uint32 callbackGasLimit;
     } //这里对应上了Raffle.sol的constructor 部分内容想当于是提供初始化的参数的部分
+    mapping(uint256 => NetworkConfig) public networkConfigs;
+    NetworkConfig public localNetworkConfig;
+    error HelperConfig__InvalidChainId();
+
     function getSepoliaEthConfig() public pure returns (NetworkConfig memory) {
         return
             NetworkConfig({
@@ -45,10 +55,12 @@ contract HelperConfig is Script, CodeConstants {
                 subscriptionId: 0
             });
     }
-
+    function getConfig() public returns (NetworkConfig memory) {
+        return getConfigByChainId(block.chainid);
+    }
     function getConfigByChainId(
         uint256 chainId
-    ) public view returns (NetworkConfig memory) {
+    ) public returns (NetworkConfig memory) {
         if (networkConfigs[chainId].vrfCoordinator != address(0)) {
             return networkConfigs[chainId];
             //如果这个chainid  的配置不是0地址 证明配置已经存在了 直接返回
@@ -61,10 +73,33 @@ contract HelperConfig is Script, CodeConstants {
         }
     }
     function getOrCreateAnvilEthConfig() public returns (NetworkConfig memory) {
-        //检查 如果 活动的玩过 不是0的话返回本地的值
+        //检查有没有已经存在的配置
         if (localNetworkConfig.vrfCoordinator != address(0)) {
             //如果不等于0的话证明已经有了 相当于之前已经部署过了
             return localNetworkConfig;
+            //检查是否设置活动网络 localNetworkConfig
         }
+
+        //没有的话部署mock
+        //看到新引入的mock的值后 次啊用了 以及import引入的VRFCoordinatorV2——5 的sol后 考虑加入一下代码  满足三个参数
+        vm.startBroadcast();
+        VRFCoordinatorV2_5Mock vrfCoordinatorMock = new VRFCoordinatorV2_5Mock(
+            MOCK_BASE_FEE,
+            MOCK_GAS_PRICE_LINK,
+            MOCK_WEI_PER_UNIT_LINK
+        );
+        vm.stopBroadcast();
+        //检查 如果 活动的玩过 不是0的话返回本地的值
+        //部署完后得到了这个地址 然后关键一步 完成NetworkConfig
+        //用mock地址组装 存起阿里返回
+        localNetworkConfig = NetworkConfig({
+            entranceFee: 0.01 ether,
+            interval: 30,
+            vrfCoordinator: address(vrfCoordinatorMock), //这里注意用的是mock模拟的 地址
+            gasLane: 0x787d74caea10b2b357790d5b5247c2f63d1d91572a9846f780606e4d953677ae,
+            subscriptionId: 0,
+            callbackGasLimit: 500000
+        });
+        return localNetworkConfig;
     }
 }

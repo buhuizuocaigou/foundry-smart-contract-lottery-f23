@@ -25,10 +25,16 @@
 // view & pure functions ：纯计算
 
 pragma solidity ^0.8.19;
-import {VRFConsumerBaseV2Plus} from "@chainlink/contracts@1.5.0/src/v0.8/vrf/dev/VRFConsumerBaseV2Plus.sol";
+import {
+    VRFConsumerBaseV2Plus
+} from "@chainlink/contracts@1.5.0/src/v0.8/vrf/dev/VRFConsumerBaseV2Plus.sol";
 //提供了 RandomWordsrEQUEST struct 跟 _argsToBytes的工具函数 VRF请求要用的函数
-import {VRFV2PlusClient} from "@chainlink/contracts@1.5.0/src/v0.8/vrf/dev/libraries/VRFV2PlusClient.sol";
-import {AutomationCompatibleInterface} from "@chainlink/contracts@1.5.0/src/v0.8/automation/interfaces/AutomationCompatibleInterface.sol";
+import {
+    VRFV2PlusClient
+} from "@chainlink/contracts@1.5.0/src/v0.8/vrf/dev/libraries/VRFV2PlusClient.sol";
+import {
+    AutomationCompatibleInterface
+} from "@chainlink/contracts@1.5.0/src/v0.8/automation/interfaces/AutomationCompatibleInterface.sol";
 
 error Raffle__NotEnoughETHEntered(); //使用自定义错误来干嘛排除当用户输入的ETH的金额过少的饿时候 提示错误目的是告知用户需要交更多的ETH
 error Raffle__TransferFailed(); //定义如果发现转账不成功的话revert的值 失败后的错误
@@ -216,6 +222,7 @@ contract Raffle is VRFConsumerBaseV2Plus, AutomationCompatibleInterface {
         emit PickedWinner(winner);
     }
     //轮动数学计算必将伴随着取模行为类似于星期一样的周期摸数返回
-
-    //为啥在子合约中重写呢？因为VRFConsumerBaseV2Plus被标记为 virtual 需要在自合约中重写
+    function getRaffleState() public view returns (RaffleState) {
+        return s_raffleState;
+    }
 }
