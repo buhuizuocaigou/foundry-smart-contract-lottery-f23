@@ -36,15 +36,6 @@ import {
     AutomationCompatibleInterface
 } from "@chainlink/contracts@1.5.0/src/v0.8/automation/interfaces/AutomationCompatibleInterface.sol";
 
-error Raffle__NotEnoughETHEntered(); //使用自定义错误来干嘛排除当用户输入的ETH的金额过少的饿时候 提示错误目的是告知用户需要交更多的ETH
-error Raffle__TransferFailed(); //定义如果发现转账不成功的话revert的值 失败后的错误
-error Raffle__RaffleNotOpen(); //定义 如果发现 Raffleopen失败了 的话 报错目的为了验证枚举是否成功
-error Raffle__UpkeepNotNeeded(
-    uint256 currentBalance,
-    uint256 numPlayers,
-    uint256 raffleState
-);
-
 //声明动态数组用来存放东西的一个容器：
 //chainlink VRFv2.5
 /**
@@ -54,6 +45,15 @@ error Raffle__UpkeepNotNeeded(
  * @dev 他实现了ChainkLINK VRF功能来实现随机数以及 Chainklink Automations 来实现抽奖功能
  */
 contract Raffle is VRFConsumerBaseV2Plus, AutomationCompatibleInterface {
+    error Raffle__NotEnoughETHEntered(); //使用自定义错误来干嘛排除当用户输入的ETH的金额过少的饿时候 提示错误目的是告知用户需要交更多的ETH
+    error Raffle__TransferFailed(); //定义如果发现转账不成功的话revert的值 失败后的错误
+    error Raffle__RaffleNotOpen(); //定义 如果发现 Raffleopen失败了 的话 报错目的为了验证枚举是否成功
+    error Raffle__UpkeepNotNeeded(
+        uint256 currentBalance,
+        uint256 numPlayers,
+        uint256 raffleState
+    );
+    error Raffle__NotEnoughEthSent();
     //类型声明：
     enum RaffleState {
         OPEN, //最开始抽奖的状态
@@ -173,7 +173,7 @@ contract Raffle is VRFConsumerBaseV2Plus, AutomationCompatibleInterface {
     //             VRFV2PlusClient.ExtraArgsV1({nativePayment: true}) //这里false 嗲表用 link付费
     //         )
     //     })
-    // );
+    // );2
 
     //目的是让人能看到这个抽奖价格是多少设立一个get函数
     function getEntranceFee() public view returns (uint256) {
