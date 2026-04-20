@@ -127,7 +127,7 @@ contract Raffle is VRFConsumerBaseV2Plus, AutomationCompatibleInterface {
         upkeepNeeded = (timePassed && isOpen && hasBalance && hasPlayers); //如果要上述都是1111也就是都满足的情况下
         return (upkeepNeeded, "0x0"); //?这里为啥要返回这个 0x0 这是个占位符 正常的情况下他可能跟返回的更高的值
     }
-
+    //检查是否开奖
     function performUpkeep(bytes calldata /*performData*/) external override {
         (bool upkeepNeeded, ) = checkUpkeep(""); //checkupkeep调用我写的那个函数 传空字符串进去，checkupkeep返回俩只 逗号面前的空位表示我只要upkeepneed 返回值告诉我通过没通过 通过了证明一期二正常
         if (!upkeepNeeded) {

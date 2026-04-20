@@ -77,4 +77,16 @@ contract RaffleTest is Test {
         emit EnteredRaffle(PLAYER); //先告知我有有一个 index player  然后后后面调用PLAYER真实用户 比较这个伪造的借助事件的 跟 不参与这个事件的是否一致
         raffle.enterRaffle{value: entranceFee}(); //加括号的目的是执行这个函数
     }
+    function testDontAllowPlayersToEnterWhileRaffleIsCalculating() public {
+        vm.prank(PLAYER);
+        raffle.enterRaffle{value: entranceFee}();
+        vm.warp(block.timestamp + interval + 1);
+        vm.roll(block.number + 1);
+        raffle.performUpkeep(""); //检查完时间检查区块目的查是否开奖 如果state 已经在抽奖中了 我们是不需要加人进来的
+
+        vm.expectRevert(Raffle.Raffle__RaffleNotOpen.selector); //猜测下一个调用必会revert 因为已经正在开奖中了 这个奖池正常来说已经进不去了
+        //检查一下到底开没开
+        vm.prank(PLAYER); //对比一下是不是他开的
+        raffle.enterRaffle{value: entranceFee}(); //二次验证后发现 确实被拒绝了e
+    }
 }
