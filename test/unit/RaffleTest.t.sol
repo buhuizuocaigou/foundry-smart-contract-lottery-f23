@@ -20,6 +20,7 @@ contract RaffleTest is Test {
     //都是之前传递过来的参数 是Raffle建立抽奖的时候初始化的数字
     address public PLAYER = makeAddr("player"); //建立一个玩家 获取他的地址
     uint256 public constant STARTING_USER_BALANCE = 10 ether;
+    event EnteredRaffle(address indexed player);
 
     function setUp() external {
         DeployRaffle deployer = new DeployRaffle();
@@ -66,5 +67,14 @@ contract RaffleTest is Test {
         address playerRecorded = raffle.getPlayer(0); //由于有一个用户目的是 获取第一个玩家的地址 数组为0的地址
 
         assert(playerRecorded == PLAYER); //我预计 这里使用的人是player ，然后如果不是则在我这个失败提示截断
+    }
+    function testEmitsEventOnEntrance() public {
+        vm.prank(PLAYER); //以正常的player身份调用
+
+        vm.expectEmit(true, false, false, false, address(raffle));
+        //进行emit测试对比 ，利用这个值 来测试 player的身份跟真事的事件进行对比比较
+        //在expectEmit中  其中 1-3对应了indexed在事件中使用的参数，而CheckdATA 对应事件中为任何建立索引的参数，最后 expectEmit期望接受事件的触发地址，素以 只有一个已经家里索引  参数
+        emit EnteredRaffle(PLAYER); //先告知我有有一个 index player  然后后后面调用PLAYER真实用户 比较这个伪造的借助事件的 跟 不参与这个事件的是否一致
+        raffle.enterRaffle{value: entranceFee}(); //加括号的目的是执行这个函数
     }
 }
