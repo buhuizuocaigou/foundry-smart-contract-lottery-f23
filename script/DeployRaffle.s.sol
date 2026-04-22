@@ -4,6 +4,7 @@ pragma solidity ^0.8.20;
 import {Script} from "forge-std/Script.sol";
 import {Raffle} from "../src/Raffle.sol";
 import {HelperConfig} from "./HelperConfig.s.sol";
+import {CreateSubscription} from "./Interactions.sol";
 
 contract DeployRaffle is Script {
     function run() external returns (Raffle, HelperConfig) {
@@ -16,6 +17,12 @@ contract DeployRaffle is Script {
         //如何筛选呢返回的值要实例化上报到 Raffle 跟HelpConfig上面
         //那么如何部署这些合约呢？我们要参数 Raffle的 比如 ：entranceFee interval等等包括gaslane 这些东西是随着不同的区块链他的内容不同 那么我们该如何处理呢？如何让他适配呢？答案是写一个helpconfig 根据不同的部署网络也就是blockchainlink的值来制定这些内容
         HelperConfig.NetworkConfig memory config = helperConfig.getConfig();
+        if (config.subscriptionId == 0) {
+            CreateSubscription createSubscription = new CreateSubscription();
+            config.subscriptionId = createSubscription.createSubscription(
+                config.vrfCoordinator
+            );
+        }
         vm.startBroadcast();
         Raffle raffle = new Raffle(
             config.entranceFee,

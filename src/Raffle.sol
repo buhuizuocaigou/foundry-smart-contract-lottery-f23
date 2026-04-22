@@ -207,7 +207,7 @@ contract Raffle is VRFConsumerBaseV2Plus, AutomationCompatibleInterface {
         uint256 requestId,
         uint256[] calldata randomWords //这里的calldata 是调用只读的 不需要复制  memory数据从calldata拷贝内存里 本身消耗gas ，内存扩展向外收飞
     ) internal override {
-        //
+        //@buhuizuocaigou @remind
         //选择获胜者并且发送奖励然后重置抽奖
         uint256 indexOfWinner = randomWords[0] % s_players.length; //对参与抽奖的player进行取模运算并且将其放到 获胜者这里 是第几顺位
         address payable winner = s_players[indexOfWinner]; //得到第几顺位后，然后放到s_players里面 并且 去附加给 winner的地址 在所有数组中找到最终的获胜者
