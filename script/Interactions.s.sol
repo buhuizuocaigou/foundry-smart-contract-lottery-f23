@@ -8,6 +8,7 @@ import {
     VRFCoordinatorV2_5Mock
 } from "@chainlink/contracts@1.5.0/src/v0.8/vrf/mocks/VRFCoordinatorV2_5Mock.sol";
 import {LinkToken} from "test/mocks/LinkToken.sol";
+import {DevOpsTools} from "lib/foundry-devops/src/DevOpsTools.sol";
 
 contract CreateSubscription is Script {
     function CreateSubscriptionUsingConfig() public returns (uint256, address) {
@@ -96,15 +97,17 @@ contract FundSubscription is Script, CodeConstants {
     }
 }
 
+// AddConsumer 合并为唯一版本
 contract AddConsumer is Script {
     function addConsumer(
         address raffle,
         address vrfCoordinator,
         uint256 subscriptionId
     ) public {
-        console.log("Adding consumer: ", raffle);
-        console.log("To vrfCoordinator: ", vrfCoordinator);
-        console.log("On chainId: ", block.chainid);
+        console.log("Adding consumer contract: ", raffle);
+        console.log("Using VRFCoordinator: ", vrfCoordinator); // fix: confole -> console
+        console.log("On Chain id: ", block.chainid); // fix: chianid -> chainid
+
         vm.startBroadcast();
         VRFCoordinatorV2_5Mock(vrfCoordinator).addConsumer(
             subscriptionId,
@@ -115,10 +118,19 @@ contract AddConsumer is Script {
 
     function addConsumerUsingConfig(address raffle) public {
         HelperConfig helperConfig = new HelperConfig();
-        address vrfCoordinator = helperConfig.getConfig().vrfCoordinator;
+        address vrfCoordinator = helperConfig.getConfig().vrfCoordinator; // fix: 改用 struct 点访问
         uint256 subscriptionId = helperConfig.getConfig().subscriptionId;
         addConsumer(raffle, vrfCoordinator, subscriptionId);
     }
 
-    function run() external {}
+    function run() external {
+        address raffle = DevOpsTools.get_most_recent_deployment(
+            "MyContract",
+            block.chainid
+        );
+        // 自动读取最新的地址，为啥不硬编码地址呢？很简单，因为每次 forge script 重新部署地址都会改变
+        // 用 DevOpsTools 的话每次都自动读取最新地址
+        addConsumerUsingConfig(raffle); // 把刚读取的地址注册为 Chainlink VRF 的消费者
+        // VRF 订阅机制要求合约必须显式加入白名单，否则 VRF 请求会回滚
+    }
 }
