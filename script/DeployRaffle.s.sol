@@ -19,7 +19,7 @@ contract DeployRaffle is Script {
         HelperConfig.NetworkConfig memory config = helperConfig.getConfig();
         if (config.subscriptionId == 0) {
             CreateSubscription createSubscription = new CreateSubscription();
-            config.subscriptionId = createSubscription.createSubscription(
+            (config.subscriptionId, ) = createSubscription.createSubscription(
                 config.vrfCoordinator //为啥要穿进去 subscriptionId=0 后又传出来呢？
                 //答案是很简单的 是链上的地址  根据他判断是否是anvil也就是本地链路的地址，如果是本地链路的就是0  如果不是的话就传链条
             ); //相当于我们大逻辑是先判断是否要传入 ，如果传入的话那么继续完善他的资金逻辑

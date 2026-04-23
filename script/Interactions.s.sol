@@ -10,57 +10,65 @@ import {
 import {LinkToken} from "test/mocks/LinkToken.sol";
 
 contract CreateSubscription is Script {
-    function CreateSubscriptionUsingConfig() public returns (uint64) {}
-
-    function run() external returns (uint64) {
-        //本质是将启动项进行封装管理的操作类型
-        return CreateSubscriptionUsingConfig();
+    function CreateSubscriptionUsingConfig() public returns (uint256, address) {
+        HelperConfig helperConfig = new HelperConfig();
+        address vrfCoordinator = helperConfig.getConfig().vrfCoordinator;
+        (uint256 subId, ) = createSubscription(vrfCoordinator);
+        return (subId, vrfCoordinator);
     }
-    //写这个函数的目的是创建订阅 的目的
+
     function createSubscription(
-        address VRFCoordinator
-    ) public returns (uint256) {
-        console.log("Creating subscription on chianlinkid is :", block.chainid);
+        address vrfCoordinator
+    ) public returns (uint256, address) {
+        console.log("Creating subscription on chainid is :", block.chainid);
         vm.startBroadcast();
-        uint256 subId = VRFCoordinatorV2_5Mock(VRFCoordinator)
+        uint256 subId = VRFCoordinatorV2_5Mock(vrfCoordinator)
             .createSubscription();
         vm.stopBroadcast();
-        console.log("you id is", subId);
-        console.log("Please update subscriptionID IN HelpConfig");
-        return subId;
+        console.log("your id is", subId);
+        console.log("Please update subscriptionID in HelperConfig");
+        return (subId, vrfCoordinator);
     }
-    //新版本的V2——5 是 把subID从uint64 升级到了uint256 需要注意一下
 
-    //我们需要构造一个 Fundsubsctipton 函数来后才能夯实构造并且 人为的mock 一些代币给他 目的是能mock出在本地模拟出link 的交易合约
+    function run() external returns (uint256, address) {
+        return CreateSubscriptionUsingConfig();
+    }
 }
+
 contract FundSubscription is Script, CodeConstants {
-    uint256 public constant FUND_AMOUNT = 3 ether; //往anvil搭建的本地中充值3个eth  因为不是主网 且不上链条所以可能有这个烦恼在身上
+    uint256 public constant FUND_AMOUNT = 3 ether;
 
     function fundSubscriptionUsingConfig() public {
         HelperConfig helperConfig = new HelperConfig();
         address vrfCoordinator = helperConfig.getConfig().vrfCoordinator;
         uint256 subscriptionId = helperConfig.getConfig().subscriptionId;
         address linkToken = helperConfig.getConfig().linkToken;
+
+        if (subscriptionId == 0) {
+            CreateSubscription createSub = new CreateSubscription();
+            (uint256 updatedSubId, address updatedVRFv2_5) = createSub.run();
+            subscriptionId = updatedSubId;
+            vrfCoordinator = updatedVRFv2_5;
+            console.log(
+                "New SubId Created! ",
+                subscriptionId,
+                "VRF Address: ",
+                vrfCoordinator
+            );
+        }
+
         fundSubscription(vrfCoordinator, subscriptionId, linkToken);
     }
 
-    function run() external {
-        fundSubscriptionUsingConfig();
-    } //与创建订阅中的所列出的结构以及啥非常相似 ,但是我们因为是本地链且需要引入link合约所以的话我们在这也得如法炮制 ，只不过这一切是自己的
-    //我们需要啥：
-    //1 测试网部署了link 我们能够访问地址
-    //2. anvil本身并没有预制 link合约，且我们需要部署模拟的link代币合约
-
-    //经典进行分离 以方便管理 这个在
-    //搞定配置 ，然后上链
-    //这里 helperconfig 搞定“值从哪里来”
-    //fundSubscriptionUsingConfig解决怎么把值取出来
-    //fundSubscription解决拿到了以后干嘛
     function fundSubscription(
         address vrfCoordinator,
         uint256 subscriptionId,
         address linkToken
     ) public {
+        console.log("Funding subscription: ", subscriptionId);
+        console.log("Using vrfCoordinator: ", vrfCoordinator);
+        console.log("On chainId: ", block.chainid);
+
         if (block.chainid == ETH_ANVIL_CHAIN_ID) {
             vm.startBroadcast();
             VRFCoordinatorV2_5Mock(vrfCoordinator).fundSubscription(
@@ -82,4 +90,35 @@ contract FundSubscription is Script, CodeConstants {
             vm.stopBroadcast();
         }
     }
+
+    function run() public {
+        fundSubscriptionUsingConfig();
+    }
+}
+
+contract AddConsumer is Script {
+    function addConsumer(
+        address raffle,
+        address vrfCoordinator,
+        uint256 subscriptionId
+    ) public {
+        console.log("Adding consumer: ", raffle);
+        console.log("To vrfCoordinator: ", vrfCoordinator);
+        console.log("On chainId: ", block.chainid);
+        vm.startBroadcast();
+        VRFCoordinatorV2_5Mock(vrfCoordinator).addConsumer(
+            subscriptionId,
+            raffle
+        );
+        vm.stopBroadcast();
+    }
+
+    function addConsumerUsingConfig(address raffle) public {
+        HelperConfig helperConfig = new HelperConfig();
+        address vrfCoordinator = helperConfig.getConfig().vrfCoordinator;
+        uint256 subscriptionId = helperConfig.getConfig().subscriptionId;
+        addConsumer(raffle, vrfCoordinator, subscriptionId);
+    }
+
+    function run() external {}
 }
