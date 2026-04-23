@@ -1,0 +1,22 @@
+strict digraph {
+rankdir="LR"
+node [shape=box]
+subgraph cluster_502_IVRFSubscriptionV2Plus {
+label = "IVRFSubscriptionV2Plus"
+"502_removeConsumer" [label="removeConsumer"]
+"502_getActiveSubscriptionIds" [label="getActiveSubscriptionIds"]
+"502_getSubscription" [label="getSubscription"]
+"502_pendingRequestExists" [label="pendingRequestExists"]
+"502_acceptSubscriptionOwnerTransfer" [label="acceptSubscriptionOwnerTransfer"]
+"502_addConsumer" [label="addConsumer"]
+"502_fundSubscriptionWithNative" [label="fundSubscriptionWithNative"]
+"502_requestSubscriptionOwnerTransfer" [label="requestSubscriptionOwnerTransfer"]
+"502_cancelSubscription" [label="cancelSubscription"]
+"502_createSubscription" [label="createSubscription"]
+}subgraph cluster_399_IVRFCoordinatorV2Plus {
+label = "IVRFCoordinatorV2Plus"
+"399_requestRandomWords" [label="requestRandomWords"]
+}subgraph cluster_solidity {
+label = "[Solidity]"
+}
+}

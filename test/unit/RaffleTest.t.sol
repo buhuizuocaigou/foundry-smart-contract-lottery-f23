@@ -4,6 +4,7 @@ import {DeployRaffle} from "../../script/DeployRaffle.s.sol";
 import {Raffle} from "../../src/Raffle.sol";
 import {Test, console2} from "forge-std/Test.sol";
 import {HelperConfig} from "../../script/HelperConfig.s.sol";
+import {LinkToken} from "test/mocks/LinkToken.sol";
 
 contract RaffleTest is Test {
     Raffle public raffle;
@@ -20,6 +21,7 @@ contract RaffleTest is Test {
     //都是之前传递过来的参数 是Raffle建立抽奖的时候初始化的数字
     address public PLAYER = makeAddr("player"); //建立一个玩家 获取他的地址
     uint256 public constant STARTING_USER_BALANCE = 10 ether;
+    LinkToken public linkToken;
     event EnteredRaffle(address indexed player);
 
     function setUp() external {
@@ -35,6 +37,7 @@ contract RaffleTest is Test {
         gasLane = config.gasLane;
         subscriptionId = config.subscriptionId;
         callbackGasLimit = config.callbackGasLimit;
+        linkToken = LinkToken(config.linkToken);
     }
     function testRaffleInitializesInOpenState() public view {
         assert(raffle.getRaffleState() == Raffle.RaffleState.OPEN);

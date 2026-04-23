@@ -1,0 +1,78 @@
+strict digraph {
+rankdir="LR"
+node [shape=box]
+subgraph cluster_39_ConfirmedOwner {
+label = "ConfirmedOwner"
+"39_constructor" [label="constructor"]
+"39_constructor" -> "39_constructor"
+}subgraph cluster_202_ConfirmedOwnerWithProposal {
+label = "ConfirmedOwnerWithProposal"
+"202_transferOwnership" [label="transferOwnership"]
+"202_acceptOwnership" [label="acceptOwnership"]
+"202__transferOwnership" [label="_transferOwnership"]
+"202_owner" [label="owner"]
+"202__validateOwnership" [label="_validateOwnership"]
+"202_constructor" [label="constructor"]
+"202_transferOwnership" -> "202__transferOwnership"
+"202_constructor" -> "202__transferOwnership"
+"202_transferOwnership" -> "202_onlyOwner"
+}subgraph cluster_18_AutomationCompatibleInterface {
+label = "AutomationCompatibleInterface"
+"18_checkUpkeep" [label="checkUpkeep"]
+"18_performUpkeep" [label="performUpkeep"]
+}subgraph cluster_914_Raffle {
+label = "Raffle"
+"914_slitherConstructorConstantVariables" [label="slitherConstructorConstantVariables"]
+"914_constructor" [label="constructor"]
+"914_fulfillRandomWords" [label="fulfillRandomWords"]
+"914_enterRaffle" [label="enterRaffle"]
+"914_getRaffleState" [label="getRaffleState"]
+"914_checkUpkeep" [label="checkUpkeep"]
+"914_getEntranceFee" [label="getEntranceFee"]
+"914_getPlayer" [label="getPlayer"]
+"914_performUpkeep" [label="performUpkeep"]
+"914_constructor" -> "914_constructor"
+"914_performUpkeep" -> "914_checkUpkeep"
+}subgraph cluster_218_IOwnable {
+label = "IOwnable"
+"218_owner" [label="owner"]
+"218_acceptOwnership" [label="acceptOwnership"]
+"218_transferOwnership" [label="transferOwnership"]
+}subgraph cluster_381_VRFConsumerBaseV2Plus {
+label = "VRFConsumerBaseV2Plus"
+"381_constructor" [label="constructor"]
+"381_setCoordinator" [label="setCoordinator"]
+"381_rawFulfillRandomWords" [label="rawFulfillRandomWords"]
+"381_fulfillRandomWords" [label="fulfillRandomWords"]
+"381_rawFulfillRandomWords" -> "381_fulfillRandomWords"
+"381_setCoordinator" -> "381_onlyOwnerOrCoordinator"
+"381_constructor" -> "381_constructor"
+}subgraph cluster_413_IVRFMigratableConsumerV2Plus {
+label = "IVRFMigratableConsumerV2Plus"
+"413_setCoordinator" [label="setCoordinator"]
+}subgraph cluster_solidity {
+label = "[Solidity]"
+"revert Raffle__TransferFailed()" 
+"require(bool,string)" 
+"revert ZeroAddress()" 
+"balance(address)" 
+"revert OnlyCoordinatorCanFulfill(address,address)" 
+"revert Raffle__RaffleNotOpen()" 
+"revert Raffle__NotEnoughETHEntered()" 
+"revert Raffle__UpkeepNotNeeded(uint256,uint256,uint256)" 
+"914_fulfillRandomWords" -> "revert Raffle__TransferFailed()"
+"914_performUpkeep" -> "revert Raffle__UpkeepNotNeeded(uint256,uint256,uint256)"
+"381_rawFulfillRandomWords" -> "revert OnlyCoordinatorCanFulfill(address,address)"
+"381_setCoordinator" -> "revert ZeroAddress()"
+"202_acceptOwnership" -> "require(bool,string)"
+"914_checkUpkeep" -> "balance(address)"
+"914_enterRaffle" -> "revert Raffle__NotEnoughETHEntered()"
+"202__validateOwnership" -> "require(bool,string)"
+"914_performUpkeep" -> "balance(address)"
+"202_constructor" -> "require(bool,string)"
+"381_constructor" -> "revert ZeroAddress()"
+"914_enterRaffle" -> "revert Raffle__RaffleNotOpen()"
+"202__transferOwnership" -> "require(bool,string)"
+"914_fulfillRandomWords" -> "balance(address)"
+}
+}
