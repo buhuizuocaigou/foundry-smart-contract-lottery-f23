@@ -228,5 +228,5 @@ contract Raffle is VRFConsumerBaseV2Plus, AutomationCompatibleInterface {
     function getPlayer(uint256 indexOfPlayer) external view returns (address) {
         return s_players[indexOfPlayer];
     }
+    //故意触发的回滚机制的这么一个内容
 }
-//

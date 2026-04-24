@@ -1,0 +1,102 @@
+Compiling 44 files with Solc 0.8.33
+Solc 0.8.33 finished in 676.95ms
+Compiler run successful with warnings:
+Warning (2424): Natspec memory-safe-assembly special comment for inline assembly is deprecated and scheduled for removal. Use the memory-safe block annotation instead.
+   --> lib/chainlink-brownie-contracts/contracts/src/v0.8/vendor/openzeppelin-solidity/v4.7.3/contracts/utils/structs/EnumerableSet.sol:222:9:
+    |
+222 |         assembly {
+    |         ^ (Relevant source part starts here and spans across multiple lines).
+
+Warning (2424): Natspec memory-safe-assembly special comment for inline assembly is deprecated and scheduled for removal. Use the memory-safe block annotation instead.
+   --> lib/chainlink-brownie-contracts/contracts/src/v0.8/vendor/openzeppelin-solidity/v4.7.3/contracts/utils/structs/EnumerableSet.sol:296:9:
+    |
+296 |         assembly {
+    |         ^ (Relevant source part starts here and spans across multiple lines).
+
+Warning (2424): Natspec memory-safe-assembly special comment for inline assembly is deprecated and scheduled for removal. Use the memory-safe block annotation instead.
+   --> lib/chainlink-brownie-contracts/contracts/src/v0.8/vendor/openzeppelin-solidity/v4.7.3/contracts/utils/structs/EnumerableSet.sol:370:9:
+    |
+370 |         assembly {
+    |         ^ (Relevant source part starts here and spans across multiple lines).
+
+Warning (2072): Unused local variable.
+   --> src/Raffle.sol:142:9:
+    |
+142 |         uint256 requestId = s_vrfCoordinator.requestRandomWords(
+    |         ^^^^^^^^^^^^^^^^^
+
+Warning (5667): Unused function parameter. Remove or comment out the variable name to silence this warning.
+   --> src/Raffle.sol:207:9:
+    |
+207 |         uint256 requestId,
+    |         ^^^^^^^^^^^^^^^^^
+
+Warning (2018): Function state mutability can be restricted to pure
+  --> script/HelperConfig.s.sol:38:5:
+   |
+38 |     function getSepoliaEthConfig() public view returns (NetworkConfig memory) {
+   |     ^ (Relevant source part starts here and spans across multiple lines).
+
+Analysing contracts...
+Running tests...
+
+Ran 7 tests for test/unit/RaffleTest.t.sol:RaffleTest
+[PASS] testCheckUpkeepReturnsFalseIfItHasNoBalance() (gas: 20890)
+[PASS] testCheckUpkeepReturnsFalseRaffleIsntOpen() (gas: 225846)
+[PASS] testDontAllowPlayersToEnterWhileRaffleIsCalculating() (gas: 229461)
+[PASS] testEmitsEventOnEntrance() (gas: 69701)
+[PASS] testRaffleInitializesInOpenState() (gas: 8006)
+[PASS] testRaffleRecordsPlayersWhenTheyEnter() (gas: 69503)
+[PASS] testRaffleRevertsWhenYouDontPayEnough() (gas: 11187)
+Suite result: ok. 7 passed; 0 failed; 0 skipped; finished in 7.31ms (5.70ms CPU time)
+
+Ran 1 test suite in 7.95ms (7.31ms CPU time): 7 tests passed, 0 failed, 0 skipped (7 total tests)
+script/DeployRaffle.s.sol:
+- Line (location: (source ID: 38, lines: 16..19, bytes: 581..676), hits: 7) -> "function run() external returns ...  return deployContract();\n    }"
+- Function "run" (location: (source ID: 38, lines: 16..19, bytes: 581..676), hits: 7) -> "function run() external returns ...  return deployContract();\n    }"
+- Line (location: (source ID: 38, lines: 17..18, bytes: 646..669), hits: 7) -> "return deployContract()"
+- Statement (location: (source ID: 38, lines: 17..18, bytes: 646..669), hits: 7) -> "return deployContract()"
+- Statement (location: (source ID: 38, lines: 17..18, bytes: 653..669), hits: 7) -> "deployContract()"
+- Line (location: (source ID: 38, lines: 21..66, bytes: 778..2566), hits: 7) -> "function deployContract() intern...rn (raffle, helperConfig);\n    }"
+- Function "deployContract" (location: (source ID: 38, lines: 21..66, bytes: 778..2566), hits: 7) -> "function deployContract() intern...rn (raffle, helperConfig);\n    }"
+- Line (location: (source ID: 38, lines: 22..23, bytes: 854..900), hits: 7) -> "HelperConfig helperConfig = new HelperConfig()"
+- Statement (location: (source ID: 38, lines: 22..23, bytes: 854..900), hits: 7) -> "HelperConfig helperConfig = new HelperConfig()"
+- Statement (location: (source ID: 38, lines: 22..23, bytes: 882..900), hits: 7) -> "new HelperConfig()"
+- Line (location: (source ID: 38, lines: 23..24, bytes: 910..977), hits: 7) -> "HelperConfig.NetworkConfig memor...onfig = helperConfig.getConfig()"
+- Statement (location: (source ID: 38, lines: 23..24, bytes: 910..977), hits: 7) -> "HelperConfig.NetworkConfig memor...onfig = helperConfig.getConfig()"
+- Statement (location: (source ID: 38, lines: 23..24, bytes: 953..977), hits: 7) -> "helperConfig.getConfig()"
+- Line (location: (source ID: 38, lines: 26..27, bytes: 1088..1114), hits: 7) -> "config.subscriptionId == 0"
+- Statement (location: (source ID: 38, lines: 26..27, bytes: 1088..1114), hits: 7) -> "config.subscriptionId == 0"
+- Branch (branch: 0, path: 0) (location: (source ID: 38, lines: 26..42, bytes: 1116..1844), hits: 7) -> "{\n            // 第一步：创...nkToken\n            );\n        }"
+- Line (location: (source ID: 38, lines: 29..30, bytes: 1315..1379), hits: 7) -> "CreateSubscription createSubscription = new CreateSubscription()"
+- Statement (location: (source ID: 38, lines: 29..30, bytes: 1315..1379), hits: 7) -> "CreateSubscription createSubscription = new CreateSubscription()"
+- Statement (location: (source ID: 38, lines: 29..30, bytes: 1355..1379), hits: 7) -> "new CreateSubscription()"
+- Line (location: (source ID: 38, lines: 30..33, bytes: 1393..1511), hits: 7) -> "(config.subscriptionId, ) = crea...fig.vrfCoordinator\n            )"
+- Statement (location: (source ID: 38, lines: 30..33, bytes: 1393..1511), hits: 7) -> "(config.subscriptionId, ) = crea...fig.vrfCoordinator\n            )"
+- Line (location: (source ID: 38, lines: 35..36, bytes: 1602..1660), hits: 7) -> "FundSubscription fundSubscription = new FundSubscription()"
+- Statement (location: (source ID: 38, lines: 35..36, bytes: 1602..1660), hits: 7) -> "FundSubscription fundSubscription = new FundSubscription()"
+- Statement (location: (source ID: 38, lines: 35..36, bytes: 1638..1660), hits: 7) -> "new FundSubscription()"
+- Line (location: (source ID: 38, lines: 36..41, bytes: 1674..1833), hits: 7) -> "fundSubscription.fundSubscriptio...  config.linkToken\n            )"
+- Statement (location: (source ID: 38, lines: 36..41, bytes: 1674..1833), hits: 7) -> "fundSubscription.fundSubscriptio...  config.linkToken\n            )"
+- Line (location: (source ID: 38, lines: 44..45, bytes: 1889..1908), hits: 7) -> "vm.startBroadcast()"
+- Statement (location: (source ID: 38, lines: 44..45, bytes: 1889..1908), hits: 7) -> "vm.startBroadcast()"
+- Line (location: (source ID: 38, lines: 45..53, bytes: 1918..2150), hits: 7) -> "Raffle raffle = new Raffle(\n    ...onfig.callbackGasLimit\n        )"
+- Statement (location: (source ID: 38, lines: 45..53, bytes: 1918..2150), hits: 7) -> "Raffle raffle = new Raffle(\n    ...onfig.callbackGasLimit\n        )"
+- Statement (location: (source ID: 38, lines: 45..53, bytes: 1934..2150), hits: 7) -> "new Raffle(\n            config.e...onfig.callbackGasLimit\n        )"
+- Line (location: (source ID: 38, lines: 53..54, bytes: 2160..2178), hits: 7) -> "vm.stopBroadcast()"
+- Statement (location: (source ID: 38, lines: 53..54, bytes: 2160..2178), hits: 7) -> "vm.stopBroadcast()"
+- Line (location: (source ID: 38, lines: 57..58, bytes: 2334..2377), hits: 7) -> "AddConsumer addConsumer = new AddConsumer()"
+- Statement (location: (source ID: 38, lines: 57..58, bytes: 2334..2377), hits: 7) -> "AddConsumer addConsumer = new AddConsumer()"
+- Statement (location: (source ID: 38, lines: 57..58, bytes: 2360..2377), hits: 7) -> "new AddConsumer()"
+- Line (location: (source ID: 38, lines: 58..63, bytes: 2387..2519), hits: 7) -> "addConsumer.addConsumer(\n       ... config.subscriptionId\n        )"
+- Statement (location: (source ID: 38, lines: 58..63, bytes: 2387..2519), hits: 7) -> "addConsumer.addConsumer(\n       ... config.subscriptionId\n        )"
+- Line (location: (source ID: 38, lines: 64..65, bytes: 2530..2559), hits: 7) -> "return (raffle, helperConfig)"
+- Statement (location: (source ID: 38, lines: 64..65, bytes: 2530..2559), hits: 7) -> "return (raffle, helperConfig)"
+
+script/HelperConfig.s.sol:
+- Line (location: (source ID: 39, lines: 22..25, bytes: 814..905), hits: 7) -> "constructor() {\n        networkC...] = getSepoliaEthConfig();\n    }"
+- Function "constructor" (location: (source ID: 39, lines: 22..25, bytes: 814..905), hits: 7) -> "constructor() {\n        networkC...] = getSepoliaEthConfig();\n    }"
+- Line (location: (source ID: 39, lines: 23..24, bytes: 838..898), hits: 7) -> "networkConfigs[ETH_SEPOLIA_CHAIN_ID] = getSepoliaEthConfig()"
+- Statement (location: (source ID: 39, lines: 23..24, bytes: 838..898), hits: 7) -> "networkConfigs[ETH_SEPOLIA_CHAIN_ID] = getSepoliaEthConfig()"
+- Line (location: (source ID: 39, lines: 38..50, bytes: 1613..2511), hits: 7) -> "function getSepoliaEthConfig() p...rf/v2-5/supported-networks\n    }"
+- Function "getSepoliaEthConfig" (location: (source ID: 39, lines: 38..50, bytes: 1613..2511), hits: 7) -> "function getSepoliaEthConfig() p...rf/v2-5/supported-networks\n    }"
