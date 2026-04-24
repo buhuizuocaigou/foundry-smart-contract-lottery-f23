@@ -77,3 +77,5 @@ $ cast --help
 2 .彩票要在一定方式以程序化的方式自动抽取中奖者 
 3.Chainklink VRF可生成一个随机数 并且这个随机数可以证明是随机的
 4。Chianklink Automaticion 应该定期的触发抽奖系统体系。
+
+4.24工作开始
