@@ -196,4 +196,13 @@ contract RaffleTest is Test {
         vm.roll(block.number + 1);
         _; //等到调用raffleEntredAndTimePassed 的时候新占用他 在往后执行其他的
     }
+
+    function testPerformUpkeepUpdatesRaffleStateAndEmitsRequestId()
+        public
+        raffleEntredAndTimePassed
+    {
+        //Act
+        vm.recordLogs(); //借助vm查看日志
+        raffle.performUpkeep(""); //emits requestId
+    }
 }
