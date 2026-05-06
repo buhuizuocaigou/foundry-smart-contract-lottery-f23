@@ -77,7 +77,10 @@ contract Raffle is VRFConsumerBaseV2Plus, AutomationCompatibleInterface {
     address private s_recentWinner;
     //涉及到钱了 这里面存放了这么多 选取一个获取金钱
     event EnteredRaffle(address indexed player);
-
+    event RequestedRaffleWinner(uint256 indexed requestId);
+    //indexed这个参数在这里存在的意义是：加了indexed 后存在于 evm 的 topics 槽 并且可以在eth_getlogs被高效过滤出来的一种机制东西
+    //注意 这里的曹是 topics 只能有2-4槽 三个 也就意味着 每一个event 只有3个槽
+    //这个被indexed 后存的是keccak256的值 不是值本身的值
     event PickedWinner(address winner); //发出一个事件告诉他们我们已经选出获胜者了
 
     //设置事件 进行事件设定 其中address是参数类型 player 是参数名字
@@ -151,6 +154,7 @@ contract Raffle is VRFConsumerBaseV2Plus, AutomationCompatibleInterface {
                 )
             })
         );
+        emit RequestedRaffleWinner(requestId); //调用事件来测试是否有用
     }
 
     //确认开奖是否真的满足间隔时间
