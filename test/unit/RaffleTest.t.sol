@@ -243,4 +243,23 @@ contract RaffleTest is Test {
             address(raffle)
         );
     }
+
+    //针对于正常的测试 ，之前通过反向测试测试了当数据不正常后会发生啥，现在尝试进行 正常项测试
+    function testFulfillRandomWOrdsPicksAWinnerResetsAndSendsMoney()
+        public
+        raffleEnteredAndTimePassed
+    {
+        uint256 additionalEntrants = 3; //这是因为会有4个人进入这个地方
+        uint256 startingIndex = 1;
+
+        for (
+            uint256 i = startingIndex;
+            i < startingIndex + additionalEntrants;
+            i++
+        ) {
+            address player = address(uint160(i));
+            hoax(player, STARTING_USER_BALANCE);
+            raffle.enterRaffle{value: entranceFee}();
+        }
+    }
 }
