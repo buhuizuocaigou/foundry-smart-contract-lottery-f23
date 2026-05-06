@@ -6,6 +6,9 @@ import {Test, console2} from "forge-std/Test.sol";
 import {HelperConfig} from "../../script/HelperConfig.s.sol";
 import {LinkToken} from "test/mocks/LinkToken.sol";
 import {Vm} from "forge-std/Vm.sol";
+import {
+    VRFCoordinatorV2_5Mock
+} from "@chainlink/contracts@1.5.0/src/v0.8/vrf/mocks/VRFCoordinatorV2_5Mock.sol";
 
 contract RaffleTest is Test {
     Raffle public raffle;
@@ -197,12 +200,47 @@ contract RaffleTest is Test {
         _; //等到调用raffleEntredAndTimePassed 的时候新占用他 在往后执行其他的
     }
 
-    function testPerformUpkeepUpdatesRaffleStateAndEmitsRequestId()
+    function testPerformUpkeepUpdatesRaffleStateAndEmitsRequestId() //验证两件事，1 raffleState 从OPEN 变成了CALCULATING 这个用getRafflestate()独居即可
+        //2 performUpkeep真的emit了一个带requestId的事件   怎么验证嗯 ？
         public
         raffleEntredAndTimePassed
     {
         //Act
-        vm.recordLogs(); //借助vm查看日志
-        raffle.performUpkeep(""); //emits requestId
+        vm.recordLogs(); //借助vm查看日志开始记录
+        raffle.performUpkeep(""); //emits requestId  执行函数 让他emit时间
+        Vm.Log[] memory entries = vm.getRecordedLogs(); //把录制的log拉出来
+        //vmlog  有topics  data  跟emitter 分别为：topics(最多4个元素event sig hash indexed1 indexed2 indexed3)
+        //data 所有的non-indexed 的参数的ABI编码
+        //emitter  这个是log的来源  发出的log的地址 这是 log的字段 调用临时内存就行  不用永久防御脸上
+        //纯变量名
+
+        bytes32 requestId = entries[1].topics[1]; //从槽位为1 的里面获取特定的reqeustId
+        //这里为啥bytes32大小  因为 evm的topic槽永远是32位的固定字节大小  不管是原始类型的uint8 256 通通是都是bytes32  所以 topics 永远是bytes 32
+        //这里的代码中entries 不应该是1，应该是0 为啥 目的是：
+
+        Raffle.RaffleState raffleState = raffle.getRaffleState(); //获取此刻抽奖状态是OPEN还是Calc正在进行中。。。
+        // assertEq(uint256(requestId), raffle.getLastRequestId());
+        assert(uint256(requestId) > 0);
+        assert(uint(raffleState) == 1); //0==状态是open 1 是calculating
+    }
+    function testFulfillRandomWordsCanOnlyBeCalledAfterPerformUpkeep()
+        public
+        raffleEntredAndTimePassed
+    {
+        vm.expectRevert("nonexistent request"); //预测下一行会报错 nonexistent
+
+        VRFCoordinatorV2_5Mock(vrfCoordinator).fulfillRandomWords(
+            0, //故意传是错的 request id 他应该发挥报错 正常报错
+            address(raffle) //告诉mock是 raffle
+        ); //我们想测试上面这里 除了0之外其他的是否有效 针对域此0 来进行测试
+    }
+    function testFulfillRandomWordsCanOnlyBeCalledAfterPerformUpkeep(
+        uint256 randomRequestId
+    ) public raffleEntredAndTimePassed {
+        vm.expectRevert(VRFCoordinatorV2_5Mock.InvalidRequest.selector); //模拟和玉额内部定义的一个自定义错误 例如 invaildRequest 模拟合约内部 selector 是合约的EVM的原生语法 并且 通过4个字节的hash识别去进行的 revert InvaildRequest（)这个性质是在 0.8.4版本之后的行为操作
+        VRFCoordinatorV2_5Mock(vrfCoordinator).fulfillRandomWords(
+            randomRequestId,
+            address(raffle)
+        );
     }
 }
