@@ -14,6 +14,8 @@ abstract contract CodeConstants {
     uint96 public constant MOCK_BASE_FEE = 0.25 ether;
     uint96 public constant MOCK_GAS_PRICE_LINK = 1e9;
     int256 public constant MOCK_WEI_PER_UNIT_LINK = 4e15;
+    uint256 public constant DEFAULT_ANVIL_KEY =
+        0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80;
 }
 
 //生成 raffle.sol这些初始化的参数结构有了生成部分内容下面进行本地网络配置不评分
@@ -30,6 +32,7 @@ contract HelperConfig is Script, CodeConstants {
         uint256 subscriptionId;
         uint32 callbackGasLimit;
         address linkToken; //本来没有的link代币合约这个得加上 ，方便以后取用  这就是avnil 添加的部分内容信息
+        uint256 deployerKey; //这里新添加了 字段 让配置知道用谁的身份去部署东西
     } //这里对应上了Raffle.sol的constructor 部分内容想当于是提供初始化的参数的部分
     mapping(uint256 => NetworkConfig) public networkConfigs;
     NetworkConfig public localNetworkConfig;
@@ -43,8 +46,9 @@ contract HelperConfig is Script, CodeConstants {
                 vrfCoordinator: 0x9DdfaCa8183c41ad55329BdeeD9F6A8d53168B1B, //官方为了获取随机数地址借助调用chaink的
                 gasLane: 0x787d74caea10b2b357790d5b5247c2f63d1d91572a9846f780606e4d953677ae, //是chainklink文档给的调用了那个gas档位
                 callbackGasLimit: 500000, //这里是毁掉的gas额度
-                subscriptionId: 0,
-                linkToken: 0x779877A7B0D9E8603169DdbD7836e478b4624789 //对应之前的新添加的link合约配置
+                subscriptionId: 102092001582142647871072857556762437751006733110627098151833951154735135401554,
+                linkToken: 0x779877A7B0D9E8603169DdbD7836e478b4624789, //对应之前的新添加的link合约配置
+                deployerKey: vm.envUint("SEPOLIA_PRIVATE_KEY")
             }); //这里对上了之前的上面struct的配置 一一对应 具体chainklink的链接：https://docs.chain.link/vrf/v2-5/supported-networks
     }
     //这是类似于anvil生成的本地链
@@ -57,7 +61,8 @@ contract HelperConfig is Script, CodeConstants {
                 gasLane: bytes32(0), //是chainklink文档给的调用了那个gas档位
                 callbackGasLimit: 500000, //这里是毁掉的gas额度
                 subscriptionId: 0,
-                linkToken: address(0)
+                linkToken: address(0),
+                deployerKey: DEFAULT_ANVIL_KEY
             });
     }
     function getConfig() public returns (NetworkConfig memory) {
@@ -106,7 +111,8 @@ contract HelperConfig is Script, CodeConstants {
             gasLane: 0x787d74caea10b2b357790d5b5247c2f63d1d91572a9846f780606e4d953677ae,
             subscriptionId: 0,
             callbackGasLimit: 500000,
-            linkToken: address(linkToken) //引入link后增加的配置
+            linkToken: address(linkToken), //引入link后增加的配置
+            deployerKey: DEFAULT_ANVIL_KEY
         });
         return localNetworkConfig;
     }
