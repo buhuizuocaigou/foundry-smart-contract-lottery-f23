@@ -247,7 +247,7 @@ contract RaffleTest is Test {
     //针对于正常的测试 ，之前通过反向测试测试了当数据不正常后会发生啥，现在尝试进行 正常项测试
     function testFulfillRandomWOrdsPicksAWinnerResetsAndSendsMoney()
         public
-        raffleEnteredAndTimePassed
+        raffleEntredAndTimePassed
     {
         uint256 additionalEntrants = 3; //这是因为会有4个人进入这个地方
         uint256 startingIndex = 1;
@@ -261,6 +261,32 @@ contract RaffleTest is Test {
             hoax(player, STARTING_USER_BALANCE);
             raffle.enterRaffle{value: entranceFee}();
         }
+        //利用requestId获取随机数并且可以显示出来
+        uint256 startingTimeStamp = raffle.getLastTimeStamp();
+        address expectedWinner = address(1); // ⚠️ 见下方说明
+        uint256 winnerStartingBalance = expectedWinner.balance;
+
+        vm.recordLogs(); //获取log的地址
+        raffle.performUpkeep(""); //借助rafflecontract 的岗位中的performUpkeep这个函数来获取相应的requestId的值
+        Vm.Log[] memory entries = vm.getRecordedLogs();
+        bytes32 requestId = entries[1].topics[1];
+        //因为部署的是本地的avil链条所以需要手动 的进行操作的过程
+        VRFCoordinatorV2_5Mock(vrfCoordinator).fulfillRandomWords(
+            uint256(requestId),
+            address(raffle)
+        );
+
+        //Assert断言测试：
+        address recentWinner = raffle.getRecentWinner(); //到底哟没有获胜者被选出
+        Raffle.RaffleState raffleState = raffle.getRaffleState(); //这个测试合约开始及状态
+        uint256 winnerBalance = recentWinner.balance; //一个测试合约本身是否开始
+        uint256 endingTimeStamp = raffle.getLastTimeStamp(); //一个测试合约完成的时间
+        uint256 prize = entranceFee * (additionalEntrants + 1); //这个测试的是合约的金额
+
+        assertEq(expectedWinner, recentWinner);
+        assertEq(uint256(raffleState), uint256(Raffle.RaffleState.OPEN));
+        assertEq(winnerBalance, winnerStartingBalance + prize);
+        assertGt(endingTimeStamp, startingTimeStamp);
     }
     /*
     上面 写的思维：验证三件事：1 选出获胜者 2 Resets 状态充值 3 送钱 
@@ -283,6 +309,14 @@ contract RaffleTest is Test {
 
     这其实就看  如果由receive（）且不revert 收钱成功  如果receive 跟revert 这俩条件中的任一一个条件不满足的话 不符合情况  
     还有一种可能性是通过多地址合约入场的形式解决这个问题
+    
+    这里面执行了3A测试断言测试：也就是说Arrange 进行准备 搭建好场景  然后过渡到Act也就是 执行部分 最后是Assert 也就是断言的部分内容
+    这里arrange是舞台的意思布置舞玩家入场 进行时间推进，然后最后拿到requestId 的合适哦  没开始测真正的行为 
+
+    后面的Act指的是触发被测行为的过程
+
+    第三段是Assert 断言就是验证结果的过程  当检查行为发生后观察世界状态是否符合预期行为的过程内容
+
     
     
     */

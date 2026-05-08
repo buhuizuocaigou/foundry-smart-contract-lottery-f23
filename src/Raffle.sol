@@ -233,4 +233,16 @@ contract Raffle is VRFConsumerBaseV2Plus, AutomationCompatibleInterface {
         return s_players[indexOfPlayer];
     }
     //故意触发的回滚机制的这么一个内容
+    //为了后面测试 进而前面需要添加的函数部分的内容
+    function getRecentWinner() public view returns (address) {
+        return s_recentWinner;
+    }
+    //这里的是副本的关系
+    function getNumberOfPlayers() public view returns (uint256) {
+        return s_players.length;
+    }
+
+    function getLastTimeStamp() public view returns (uint256) {
+        return s_lastTimeStamp;
+    }
 }
