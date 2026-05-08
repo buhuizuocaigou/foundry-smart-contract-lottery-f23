@@ -262,4 +262,28 @@ contract RaffleTest is Test {
             raffle.enterRaffle{value: entranceFee}();
         }
     }
+    /*
+    上面 写的思维：验证三件事：1 选出获胜者 2 Resets 状态充值 3 送钱 
+    为了执行抽奖则要选择赢家，那么问题来了 需要几个赢家呢？
+    答案 至少需要四个 为啥呢?
+    如果是1哥 只有这个灜  多个玩家后才可以验证， 
+
+    为啥用address（uint160（i）)s生成地址 注意这个160  因为 EVM地址是160为  i从1 开始不是0
+    且address(0)是零地址检查，且0会让合约回复并且污染测试能力
+
+    hoax：不用 vm.deal跟vm.prank呢
+    因为 hoax 一行解决了一个创造一个有钱的新身份  
+    隐藏的审计点：
+    1 vm.prank只对下一外部调用生效 ，如果enterRaffle 触发了挪个外部调用的话 价差msg.sender  prank是不传递的 也就是进行调用嵌套的时候 prank的传递身份冒充机制就会失效，所以为了保证这个 用start prank 跟vm.stopprank 
+    也就是说 由 vm.prank造成的审计权限代码丢失 可能造成一定后果以及这是一个可能的审计点
+    站在红队的视角看的话 ：
+    可能的咯dog倪丹由 合约的赢家不收ETH ？PushVS pull payment 
+    这个address(uint160(i)相当于一个落地址 且这个地址没有部署任何的合约代码 实际上等于一个EOA也就是外部账户)
+    那么如果这个地址是有合约的 即为不是EOA的话 那么就情况不糊一样了 
+
+    这其实就看  如果由receive（）且不revert 收钱成功  如果receive 跟revert 这俩条件中的任一一个条件不满足的话 不符合情况  
+    还有一种可能性是通过多地址合约入场的形式解决这个问题
+    
+    
+    */
 }
