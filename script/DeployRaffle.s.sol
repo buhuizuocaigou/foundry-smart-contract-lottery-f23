@@ -28,7 +28,8 @@ contract DeployRaffle is Script {
             // fix: 去掉多余的 config.subscriptionId 和 config.linkToken 参数
             CreateSubscription createSubscription = new CreateSubscription();
             (config.subscriptionId, ) = createSubscription.createSubscription(
-                config.vrfCoordinator
+                config.vrfCoordinator,
+                config.deployerKey
             );
 
             // 第二步：给订阅充值 LINK，有了 subId 才能充值
@@ -36,12 +37,13 @@ contract DeployRaffle is Script {
             fundSubscription.fundSubscription(
                 config.vrfCoordinator,
                 config.subscriptionId,
-                config.linkToken
+                config.linkToken,
+                config.deployerKey
             );
         }
 
         // 部署 Raffle 主合约
-        vm.startBroadcast();
+        vm.startBroadcast(config.deployerKey);
         Raffle raffle = new Raffle(
             config.entranceFee,
             config.interval,
@@ -58,7 +60,8 @@ contract DeployRaffle is Script {
         addConsumer.addConsumer(
             address(raffle),
             config.vrfCoordinator,
-            config.subscriptionId
+            config.subscriptionId,
+            config.deployerKey
         );
 
         return (raffle, helperConfig);

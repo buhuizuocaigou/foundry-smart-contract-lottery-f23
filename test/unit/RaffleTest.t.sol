@@ -28,6 +28,21 @@ contract RaffleTest is Test {
     LinkToken public linkToken;
     event EnteredRaffle(address indexed player);
 
+    modifier raffleEntredAndTimePassed() {
+        vm.prank(PLAYER);
+        raffle.enterRaffle{value: entranceFee}();
+        vm.warp(block.timestamp + interval + 1);
+        vm.roll(block.number + 1);
+        _; //等到调用raffleEntredAndTimePassed 的时候新占用他 在往后执行其他的
+    }
+    modifier skipFork() {
+        if (block.chainid != 31337) {
+            return;
+        }
+
+        _;
+    }
+
     function setUp() external {
         DeployRaffle deployer = new DeployRaffle();
         //这个设立一个新的deploy 的内容
@@ -192,14 +207,6 @@ contract RaffleTest is Test {
         raffle.performUpkeep("");
     }
 
-    modifier raffleEntredAndTimePassed() {
-        vm.prank(PLAYER);
-        raffle.enterRaffle{value: entranceFee}();
-        vm.warp(block.timestamp + interval + 1);
-        vm.roll(block.number + 1);
-        _; //等到调用raffleEntredAndTimePassed 的时候新占用他 在往后执行其他的
-    }
-
     function testPerformUpkeepUpdatesRaffleStateAndEmitsRequestId() //验证两件事，1 raffleState 从OPEN 变成了CALCULATING 这个用getRafflestate()独居即可
         //2 performUpkeep真的emit了一个带requestId的事件   怎么验证嗯 ？
         public
@@ -226,8 +233,9 @@ contract RaffleTest is Test {
     function testFulfillRandomWordsCanOnlyBeCalledAfterPerformUpkeep()
         public
         raffleEntredAndTimePassed
+        skipFork
     {
-        vm.expectRevert("nonexistent request"); //预测下一行会报错 nonexistent
+        vm.expectRevert(VRFCoordinatorV2_5Mock.InvalidRequest.selector); //预测下一行会报错 nonexistent
 
         VRFCoordinatorV2_5Mock(vrfCoordinator).fulfillRandomWords(
             0, //故意传是错的 request id 他应该发挥报错 正常报错
@@ -236,7 +244,7 @@ contract RaffleTest is Test {
     }
     function testFulfillRandomWordsCanOnlyBeCalledAfterPerformUpkeep(
         uint256 randomRequestId
-    ) public raffleEntredAndTimePassed {
+    ) public raffleEntredAndTimePassed skipFork {
         vm.expectRevert(VRFCoordinatorV2_5Mock.InvalidRequest.selector); //模拟和玉额内部定义的一个自定义错误 例如 invaildRequest 模拟合约内部 selector 是合约的EVM的原生语法 并且 通过4个字节的hash识别去进行的 revert InvaildRequest（)这个性质是在 0.8.4版本之后的行为操作
         VRFCoordinatorV2_5Mock(vrfCoordinator).fulfillRandomWords(
             randomRequestId,
@@ -248,6 +256,7 @@ contract RaffleTest is Test {
     function testFulfillRandomWOrdsPicksAWinnerResetsAndSendsMoney()
         public
         raffleEntredAndTimePassed
+        skipFork
     {
         uint256 additionalEntrants = 3; //这是因为会有4个人进入这个地方
         uint256 startingIndex = 1;
