@@ -39,13 +39,14 @@ contract CreateSubscription is Script {
 }
 
 contract FundSubscription is Script, CodeConstants {
-    uint256 public constant FUND_AMOUNT = 3 ether;
+    uint256 public constant FUND_AMOUNT = 10 ether;
 
     function fundSubscriptionUsingConfig() public {
         HelperConfig helperConfig = new HelperConfig();
         address vrfCoordinator = helperConfig.getConfig().vrfCoordinator;
         uint256 subscriptionId = helperConfig.getConfig().subscriptionId;
         address linkToken = helperConfig.getConfig().linkToken;
+        uint256 deployerKey = helperConfig.getConfig().deployerKey;
 
         if (subscriptionId == 0) {
             CreateSubscription createSub = new CreateSubscription();
@@ -60,7 +61,12 @@ contract FundSubscription is Script, CodeConstants {
             );
         }
 
-        fundSubscription(vrfCoordinator, subscriptionId, linkToken);
+        fundSubscription(
+            vrfCoordinator,
+            subscriptionId,
+            linkToken,
+            deployerKey
+        );
     }
 
     function fundSubscription(
@@ -85,7 +91,7 @@ contract FundSubscription is Script, CodeConstants {
             console.log(msg.sender);
             console.log(LinkToken(linkToken).balanceOf(address(this)));
             console.log(address(this));
-            vm.startBroadcast();
+            vm.startBroadcast(deployerKey);
             LinkToken(linkToken).transferAndCall(
                 vrfCoordinator,
                 FUND_AMOUNT,
@@ -124,7 +130,8 @@ contract AddConsumer is Script {
         HelperConfig helperConfig = new HelperConfig();
         address vrfCoordinator = helperConfig.getConfig().vrfCoordinator; // fix: 改用 struct 点访问
         uint256 subscriptionId = helperConfig.getConfig().subscriptionId;
-        addConsumer(raffle, vrfCoordinator, subscriptionId);
+        uint256 deployerKey = helperConfig.getConfig().deployerKey;
+        addConsumer(raffle, vrfCoordinator, subscriptionId, deployerKey);
     }
 
     function run() external {
